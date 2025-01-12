@@ -1,4 +1,3 @@
-# Ucitavanje potrebnih biblioteka
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,18 +20,19 @@ from sklearn.feature_selection import RFE
 import warnings
 warnings.filterwarnings("ignore")
 
-# PREPROCESIRANJE PODATAKA
+# DATA PREPROCESSING
+# load dataset
 dataset = pd.read_csv("Thyroid_Diff.csv")
 #print(dataset.head(10))
 
-#provera da li ima nedostajucih vrednosti
+# checking for missing values
 missing_values = dataset.isnull().sum()
 print(missing_values)
 
 X = dataset.drop('Recurred', axis = 1)
 y = dataset['Recurred']
 
-# detekcija anomalija:
+# anomaly detection
 iso_forest = IsolationForest(contamination=0.05)
 outliers = iso_forest.fit_predict(dataset.select_dtypes(include=[np.number]))
 
@@ -42,12 +42,12 @@ anomaly_indices = X[X['Anomaly'] == -1].index
 dataset = dataset.drop(anomaly_indices)
 #print(dataset.head())
 
-# prikaz svih jedinstvenih vrednosti u kolonama
+# displaying all unique values in columns
 for column in dataset.columns:
     unique_values = dataset[column].unique()
     print("Unique values in column '{}': {}".format(column, unique_values))
 
-#pretvaranje stringova u brojeve
+# converting strings to numbers
 hotData = pd.DataFrame()
 nominal_cols = ['Thyroid Function', 'Physical Examination', 'Adenopathy', 'Pathology', 'Focality', 'T', 'N', 'M']
 ordinal_cols = ['Risk', 'Stage', 'Response']
@@ -82,7 +82,7 @@ dataset2['T'] = dataset['T']
 dataset2['N'] = dataset['N']
 dataset2['M'] = dataset['M']
 
-# One-Hot Encoding za nominalne kolone
+# One-hot encoding for nominal columns
 dataset2 = pd.get_dummies(dataset2, columns=nominal_cols, drop_first=True)
 dataset2 = dataset2.astype(int)
 pd.set_option('display.max_columns', None)
@@ -93,8 +93,8 @@ y = y.map({'No': 0,
 #print("y: \n", y.head())
 
 
-# EKSPLORATIVNA ANALIZA
-#provera korelacija:
+# EXPLORATORY DATA ANALYSIS
+# checking correlations
 correlation_matrix = dataset2.corr()
 plt.figure(figsize = (18, 18))
 sns.heatmap(correlation_matrix, annot = True, cmap = 'coolwarm', fmt = '.2f', linewidth = 0.5)
@@ -107,13 +107,13 @@ min_corr = corr_series.min()
 max_pair = corr_series[corr_series == max_corr].index[0]
 min_pair = corr_series[corr_series == min_corr].index[0]
 
-print(f"Najveća korelacija: {max_corr} između parova kolona {max_pair}")
-print(f"Najmanja korelacija: {min_corr} između parova kolona {min_pair}")
+print(f"The highest correlation is: {max_corr} between columns {max_pair}")
+print(f"The lowest correlation is: {min_corr} between columns {min_pair}")
 
-#s obzirom na jaku korelaciju izmedju Adenopathy_No i N_N1b nakon analize izbacujem Adenopathy_No
+# dropping columns due to high correlation
 dataset2 = dataset2.drop("Adenopathy_No", axis = 1)
 
-# histogram za Age - za razumevanje raspodele uzrasta pacijenata
+# histogram for Age
 plt.figure(figsize=(8, 6))
 sns.histplot(dataset['Age'], bins=20, kde=True)
 plt.title('Distribution of Age')
@@ -121,7 +121,7 @@ plt.xlabel('Age')
 plt.ylabel('Frequency')
 plt.show()
 
-# box plot Age po Gender-u - razlike u uzrastu muskaraca i zena
+# box plot of Age by Gender
 plt.figure(figsize=(8, 6))
 sns.boxplot(x='Gender', y='Age', data=dataset)
 plt.title('Age Distribution by Gender')
@@ -129,14 +129,14 @@ plt.xlabel('Gender')
 plt.ylabel('Age')
 plt.show()
 
-# pita za Risk kategorije
+# pie chart for Risk categories
 plt.figure(figsize=(8, 6))
 dataset['Risk'].value_counts().plot(kind='pie', autopct='%1.1f%%')
 plt.title('Risk Distribution')
 plt.ylabel('')
 plt.show()
 
-# prikaz prosečne starosti pacijenata po kategoriji rizika
+# displaying average Age of patients by Risk category
 plt.figure(figsize=(10, 6))
 sns.lineplot(data=dataset, x='Risk', y='Age', estimator='mean', ci=None, marker='o')
 plt.title('Average Age by Risk Category')
@@ -144,7 +144,7 @@ plt.xlabel('Risk Category')
 plt.ylabel('Average Age')
 plt.show()
 
-# zavisnosti Recurred u odnosu na Gender
+# dependence of 'Recurred' on Gender
 plt.figure(figsize=(10, 6))
 sns.countplot(x='Gender', hue='Recurred', data=dataset)
 plt.title('Recurred Cases by Gender')
@@ -152,7 +152,7 @@ plt.xlabel('Gender')
 plt.ylabel('Count')
 plt.show()
 
-# recurred u odnosu na Age
+# dependence of 'Recurred' on Age
 plt.figure(figsize=(8, 6))
 sns.boxplot(x='Recurred', y='Age', data=dataset)
 plt.title('Age Distribution by Recurred')
@@ -160,7 +160,7 @@ plt.xlabel('Recurred')
 plt.ylabel('Age')
 plt.show()
 
-# box plot recurred u odnosu na smoking
+# box plot of 'Recurred' by Smoking status
 plt.figure(figsize=(8, 6))
 sns.countplot(x='Smoking', hue='Recurred', data=dataset)
 plt.title('Recurred Cases by Smoking Status')
@@ -168,7 +168,7 @@ plt.xlabel('Smoking')
 plt.ylabel('Count')
 plt.show()
 
-# box plot za Risk kategorije u odnosu na Recurred
+# box plot of Risk categories by 'Recurred'
 plt.figure(figsize=(10, 6))
 sns.boxplot(x='Risk', y='Recurred', data=dataset)
 plt.title('Recurred Cases by Risk Category')
@@ -176,7 +176,7 @@ plt.xlabel('Risk Category')
 plt.ylabel('Recurred')
 plt.show()
 
-# bar plot za Stage u odnosu na Recurred
+# bar plot of Stage by 'Recurred'
 plt.figure(figsize=(10, 6))
 sns.countplot(x='Stage', hue='Recurred', data=dataset)
 plt.title('Recurred Cases by Cancer Stage')
@@ -184,7 +184,7 @@ plt.xlabel('Stage')
 plt.ylabel('Count')
 plt.show()
 
-# prikazivanje raspodele ciljnog atributa 'Recurred'
+# displaying the distribution of the target attribute 'Recurred'
 plt.figure(figsize=(8, 6))
 sns.countplot(x='Recurred', data=dataset)
 plt.title('Distribution of Recurred')
@@ -192,12 +192,12 @@ plt.xlabel('Recurred')
 plt.ylabel('Count')
 plt.show()
 
-# balansiranje preko smote:
+# balancing using SMOTE
 smote = SMOTE(random_state=42)
 X_smote, y_smote = smote.fit_resample(dataset2, y)
 #print("SMOTE ", pd.Series(y_smote).value_counts())
 #print(X_smote)
-# prikazivanje raspodele ciljnog atributa 'Recurred' nakon SMOTE
+# displaying the distribution of the target attribute 'Recurred' after SMOTE
 plt.figure(figsize=(8, 6))
 sns.countplot(x=y_smote)
 plt.title('Distribution of Recurred (After SMOTE)')
@@ -207,7 +207,7 @@ plt.show()
 
 X_train, X_test, y_train, y_test = train_test_split(X_smote, y_smote, test_size=0.3, stratify=y_smote)
 
-#Normalizacija
+# Normalization
 scaler = MinMaxScaler()
 X_train_norm = scaler.fit_transform(X_train)
 X_test_norm = scaler.transform(X_test)
@@ -218,7 +218,7 @@ y_test_norm = y_test
 #print("X_test_norm: \n", X_test_norm.head())
 #print("y_test_norm: \n", y_test_norm)
 
-# KREIRANJE MODELA
+# MODEL CREATION
 def define_model():
     # Stacking:
     estimators = [
@@ -239,7 +239,7 @@ def define_model():
         SVC(),
         KNeighborsClassifier(),
         DecisionTreeClassifier(),
-        # GaussianNB(),                                     #losi rezultati
+        # GaussianNB(),                                     #bad results
         RandomForestClassifier(),                           # bagging
         GradientBoostingClassifier(),                       # boosting
         AdaBoostClassifier(),                               # boosting
@@ -251,7 +251,7 @@ def define_model():
 
 models = define_model()
 
-# KNeighborsClassifier - odabir optimalnog k
+# KNeighborsClassifier - selecting the optimal k
 def find_optimal_k(X_train, y_train, X_test, y_test, max_k=10):
     k_values = []
     accuracy_values = []
@@ -267,33 +267,32 @@ def find_optimal_k(X_train, y_train, X_test, y_test, max_k=10):
     return optimal_k, k_values, accuracy_values
 
 optimal_k, k_values, accuracy_values = find_optimal_k(X_train_norm, y_train_norm, X_test_norm, y_test_norm, max_k=10)
-print("Uzeta vrednost za k kod KNeighborsClassifier: ", optimal_k)
+print("Choosen value for k in KNeighborsClassifier: ", optimal_k)
 
 plt.figure(figsize=(10, 6))
-plt.scatter(k_values, accuracy_values, color='blue', label='Tačnost za svaki k')
+plt.scatter(k_values, accuracy_values, color='blue', label='Accuracy for every k')
 plt.plot(k_values, accuracy_values, color='red', linestyle='dashed', marker='o', markerfacecolor='red', markersize = 10)
-plt.title('Metoda lakta za određivanje optimalnog broja k')
-plt.xlabel('Broj k najbližih suseda (k)')
-plt.ylabel('Greska')
+plt.title('Elbow method for determining the optimal number of k')
+plt.xlabel('Number of k nearest neighbors (k)')
+plt.ylabel('Error')
 plt.xticks(k_values)
 plt.grid(True)
 plt.legend()
 plt.show()
 
 def evaluate_model(y_test, y_pred):
-    print("Tacnost: ", accuracy_score(y_test, y_pred))
-    print("Preciznost: ", precision_score(y_test, y_pred))
-    print("Odziv: ", recall_score(y_test, y_pred))
+    print("Accuracy: ", accuracy_score(y_test, y_pred))
+    print("Precision: ", precision_score(y_test, y_pred))
+    print("Recall: ", recall_score(y_test, y_pred))
     print("F1: ", f1_score(y_test, y_pred))
-    print("Matrica konfuzije: \n", confusion_matrix(y_test, y_pred))
+    print("Confusion matrix: \n", confusion_matrix(y_test, y_pred))
     print("Jaccard similarity coefficient:", jaccard_score(y_test, y_pred))
 
 def plot_roc_curve(name, y_test,y_proba):
-    # CRTANJE ROC KRIVE
+    # Plotting the ROC curve
     fpr, tpr, _ = roc_curve(y_test, y_proba[:, 1])
     roc_auc = auc(fpr, tpr)
 
-    # Plot ROC curve
     plt.figure()
     plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
@@ -306,12 +305,12 @@ def plot_roc_curve(name, y_test,y_proba):
     #plt.show()
 
 def cross_validation(model, X_train, y_train):
-    # Unakrsna validacija
+    # Cross-validation
     cv_score = cross_val_score(model, X_train, y_train, cv=5)
-    print("Unakrsna validacija: ", cv_score)
-    print("Srednja tacnost unakrsne validacije: ", cv_score.mean())
+    print("Cross-validation: ", cv_score)
+    print("Mean accuracy of cross-validation: ", cv_score.mean())
 
-# HIPERPARAMETRI
+# HYPERPARAMETERS
 hiperparams = {
     'LogisticRegressionCV': {
         'Cs': [0.001, 0.01, 0.1, 1, 10, 100],
@@ -356,28 +355,28 @@ hiperparams = {
 def optimize_hyperparameters(model, parameteters, X_train, X_test, y_train,y_test):
     grid = GridSearchCV(model, parameteters, cv=5)
     grid.fit(X_train, y_train)
-    print("---------------------------- NAKON PODESAVANJA HIPERPARAMETARA ----------------------------")
-    print("Najbolji parametri:", grid.best_params_)
+    print("---------------------------- AFTER TUNING HYPERPARAMETERS ----------------------------")
+    print("The best parameters:", grid.best_params_)
 
     best_model = grid.best_estimator_
     best_model.fit(X_train, y_train)
     y_pred = best_model.predict(X_test)
-    # Metrike
+    # Metrics
     evaluate_model(y_test, y_pred)
     if hasattr(best_model, 'predict_proba'):
         y_proba = best_model.predict_proba(X_test)
         print("Area under the ROC Curve: ", roc_auc_score(y_test, y_proba[:, 1]))
         print("Log loss: ", log_loss(y_test, y_proba))
 
-    # Unakrsna validacija
+    # Cross-validation
     cross_validation(best_model, X_train, y_train)
 
 def feature_importances(dataset, feature_importances_array, models, X_train, X_test, y_train, y_test):
-    # agregiranje važnosti atributa
+    # aggregating attribute importance
     feature_importances_array = np.array(feature_importances_array)
     mean_importances = np.mean(feature_importances_array, axis=0)
 
-    # ispis najvažnijih atributa
+    # displaying the most important attributes
     feature_names = dataset.columns
     feature_importance_df = pd.DataFrame({
         'Feature': feature_names,
@@ -385,10 +384,10 @@ def feature_importances(dataset, feature_importances_array, models, X_train, X_t
     })
     feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False)
 
-    # print("Najvažniji atributi za sve modele:")
+    # print("Most important attributes for all models:")
     # print(feature_importance_df)
 
-    # vizualizacija najbitnijih atributa za sve modele
+    # visualization of the most important attributes for all models
     plt.figure(figsize=(15, 10))
     plt.barh(feature_importance_df['Feature'], feature_importance_df['Importance'])
     plt.xlabel('Importance')
@@ -396,10 +395,10 @@ def feature_importances(dataset, feature_importances_array, models, X_train, X_t
     plt.gca().invert_yaxis()
     plt.show()
 
-    # provera najbitnijih atributa za svaki model pojedinacno, obucavanje modela na odabranim atributima i ispis rezultata
+    # checking the most important attributes for each model individually, training the model on selected attributes, and displaying results
     for model in models:
         name = model.__class__.__name__
-        print("------------------------------ ", name, " (najbitniji atributi) ------------------------------")
+        print("------------------------------ ", name, " (the most important attributes) ------------------------------")
 
         if hasattr(model, 'feature_importances_'):
             rfe = RFE(model, n_features_to_select=10)
@@ -407,7 +406,7 @@ def feature_importances(dataset, feature_importances_array, models, X_train, X_t
             X_train_selected = rfe.transform(X_train)
             X_test_selected = rfe.transform(X_test)
             selected_features = dataset.columns[rfe.support_]
-            print("Najbitniji atributi za model ", name, " su: \n", selected_features)
+            print("The most important attributes for ", name, " are: \n", selected_features)
 
         elif hasattr(model, 'coef_'):
             rfe = RFE(model, n_features_to_select=10)
@@ -415,22 +414,22 @@ def feature_importances(dataset, feature_importances_array, models, X_train, X_t
             X_train_selected = rfe.transform(X_train)
             X_test_selected = rfe.transform(X_test)
             selected_features = dataset.columns[rfe.support_]
-            print("Najbitniji atributi za model ", name, " su: ", selected_features)
+            print("The most important attributes for ", name, " are: ", selected_features)
 
         else:
-            print("Model ", name, "nema opciju odabira najbitnijih atributa.")
+            print("Model ", name, "does not support selecting the most important attributes.")
             continue
 
         model.fit(X_train_selected, y_train)
         y_pred = model.predict(X_test_selected)
-        # Metrike
+        # Metrics
         evaluate_model(y_test, y_pred)
         if hasattr(model, 'predict_proba'):
             y_proba = model.predict_proba(X_test_selected)
             print("Area under the ROC Curve: ", roc_auc_score(y_test, y_proba[:, 1]))
             print("Log loss: ", log_loss(y_test, y_proba))
 
-        # Unakrsna validacija
+        # Cross-validation
         cross_validation(model, X_train, y_train)
 
 def train_models(dataset, models, X_train, X_test, y_train, y_test, hyperparams):
@@ -448,17 +447,17 @@ def train_models(dataset, models, X_train, X_test, y_train, y_test, hyperparams)
             plot_roc_curve(name, y_test, y_proba)
 
         print("------------------------------ ", name, " ------------------------------")
-        # Metrike
+        # Metrics
         evaluate_model(y_test, y_pred)
-        # Unakrsna validacija
+        # Cross-validation
         cross_validation(model, X_train, y_train)
 
         model_hiperparam = hyperparams.get(name, {})
         if model_hiperparam:
             optimize_hyperparameters(model, model_hiperparam, X_train, X_test, y_train, y_test)
         else:
-            print("Model", name, "nema mrežu parametara za optimizaciju.")
-        # Ispisivanje važnosti atributa
+            print("Model", name, "does not have a parameter grid for optimization.")
+        # displaying attribute importance
         if hasattr(model, 'feature_importances_'):
             importances = model.feature_importances_
         elif hasattr(model, 'coef_'):
